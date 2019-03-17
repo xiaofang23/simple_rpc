@@ -38,12 +38,14 @@ public class RpcClient {
              //发送请求数据  包括 请求接口 请求方法  请求参数类型 请求参数
              objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 
-             objectOutputStream.writeUTF(serviceinterface.getName());
+             RpcRequest request = new RpcRequest(serviceinterface.getName(),method.getName(),method.getParameterTypes(),objects);
+
+             /*objectOutputStream.writeUTF(serviceinterface.getName());
              objectOutputStream.writeUTF(method.getName());
 
              objectOutputStream.writeObject(method.getParameterTypes());
-             objectOutputStream.writeObject(objects);
-
+             objectOutputStream.writeObject(objects);*/
+             objectOutputStream.writeObject(request);
 
              //接受服务返回的对象
              ObjectInputStream oi = null;
