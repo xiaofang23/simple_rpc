@@ -1,5 +1,7 @@
 package Server;
 
+import Client.RpcRequest;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -93,18 +95,21 @@ public class ServiceCenterImp implements  ServiceCenter{
                 oiStream = new ObjectInputStream(socket.getInputStream());
 
                 //接受客户端发送
+                RpcRequest request = new RpcRequest();
+                request = (RpcRequest) oiStream.readObject();
+                /*//接受客户端发送
                 String serviceName = oiStream.readUTF();
                 String methodname = oiStream.readUTF();
 
                 Class[] getParameterTypes = (Class[]) oiStream.readObject();
-                Object[] getParameters = (Object[]) oiStream.readObject();
+                Object[] getParameters = (Object[]) oiStream.readObject();*/
 
                 //执行函数 反射
-                Class service = serviceMap.get(serviceName);
+                Class service = serviceMap.get(request.getServiceName());
                 if(service==null)
                     System.out.println(123456);
-                Method method  = service.getMethod(methodname,getParameterTypes);
-                Object resule = method.invoke(service.newInstance(),getParameters);
+                Method method  = service.getMethod(request.getMethodName(),request.getParametersType());
+                Object resule = method.invoke(service.newInstance(),request.getParameters());
 
                 //发送结果
                 ooStream.writeObject(resule);
