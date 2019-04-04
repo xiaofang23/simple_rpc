@@ -1,21 +1,16 @@
 package demo.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import demo.entity.User;
-import demo.service.interfaces.UserService;
-import demo.util.IdUtil;
+import demo.entity.MyFile;
+import demo.service.interfaces.FileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.ArrayList;
 
 
 @Controller
@@ -23,75 +18,46 @@ public class IndexController {
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
-
     @Autowired
-    UserService userService;
+    FileService fileService;
 
     @RequestMapping("/index")
     public String index(){
         return "index.html";
     }
 
-    @RequestMapping(value = "/getList",method = RequestMethod.POST)
-    @ResponseBody
-    public String getUserList(@RequestParam(name = "username") String username, @RequestParam(name = "age") int age,
-                              @RequestParam(name = "address") String address){
-
-        User user = new User(IdUtil.getId(),username,age,address);
-        userService.insertUser(user);
-
-        return JSON.toJSONString(user);
-        /*long start = System.currentTimeMillis();
-        int thread_count = 10;
-        CountDownLatch countDownLatch = new CountDownLatch(thread_count);
-        for(int i=0;i<thread_count;i++){
-            new Thread(()->{
-                User user = new User(IdUtil.getId(),"xiao",1,"hunan");
-                userService.insertUser(user);
-                countDownLatch.countDown();
-            }).start();
-        }
-        countDownLatch.await();
-        long end = System.currentTimeMillis();
-        logger.info("线程数:{},执行时间:{}",thread_count,(end-start));*/
+    @RequestMapping("/getFiles")
+    public String getFIles(Model model){
+        String path = "C:/Users/lenovo/Desktop/filedemo";
+        ArrayList<MyFile> files = fileService.getList(path);
+        model.addAttribute("currPath",getBefore(path));
+        model.addAttribute("filelist",files);
+        return "filelist";
     }
 
-    @RequestMapping("getById")
-    @ResponseBody
-    public User getById(String id){
-        logger.info("根据ID查询:{}",id);
-        return userService.getUserById(id);
+    @RequestMapping(value={"/getfiles"},method= RequestMethod.GET)
+    public String getfIles(@RequestParam("filepath") String filepath,Model model){
+        ArrayList<MyFile> files = fileService.getList(filepath);
+        System.out.println(filepath);
+        model.addAttribute("currPath",getBefore(filepath));
+        model.addAttribute("filelist",files);
+        return "filelist";
     }
 
-    @RequestMapping("/getAllUser")
+
+    @RequestMapping(value={"/getFile"},method= RequestMethod.GET)
     @ResponseBody
-    public String getAllUser(){
+    public String getFIle(@RequestParam("filepath") String filepath){
+        filepath = filepath.replaceAll("/","\\\\");
+        fileService.getFile(filepath);
+        String msg = "文件位置:"+filepath;
+        return msg;
+    }
 
-        Map<String, User> allUser = userService.getAllUser();
-
-        return JSON.toJSONString(allUser);
-        /*final Map<String, User> users = new HashMap<>();
-        AtomicReference<String> info = new AtomicReference<>("");
-        long start = System.currentTimeMillis();
-        int thread_count = 10;
-        CountDownLatch countDownLatch = new CountDownLatch(thread_count);
-        for (int i=0;i<thread_count;i++){
-             new Thread(() -> {
-                Map<String, User> allUser = userService.getAllUser();
-                logger.info("查询所有用户信息：{}", JSONObject.toJSONString(allUser));
-                info.set(JSONObject.toJSONString(allUser));
-                countDownLatch.countDown();
-            }).start();
-        }
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        long end = System.currentTimeMillis();
-        logger.info("线程数：{},执行时间:{}",thread_count,(end-start));
-        return info.get();*/
-        //return null;
+    public String getBefore(String path){
+        int pos = path.lastIndexOf("/");
+        path= path.substring(0,pos);
+        return path;
     }
 
 }

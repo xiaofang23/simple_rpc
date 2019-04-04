@@ -3,6 +3,7 @@ package demo.factory;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import demo.entity.CFile;
 import demo.netty.NettyClient;
 import demo.rpc_entity.RpcRequest;
 import demo.rpc_entity.RpcResponse;
@@ -29,7 +30,7 @@ public class RpcFactory implements InvocationHandler {
 
         RpcRequest rpcRequest = new RpcRequest();
         rpcRequest.setServiceName(method.getDeclaringClass().getName());
-       // rpcRequest.setServiceName("demo.service.interfaces.UserService");
+        logger.info("对象名为:{}",method.getDeclaringClass().getName());
         rpcRequest.setMethodName(method.getName());
         logger.info("方法名为:{}",JSON.toJSONString(method.getName()));
         rpcRequest.setParametersType(method.getParameterTypes());
@@ -37,10 +38,18 @@ public class RpcFactory implements InvocationHandler {
         rpcRequest.setParameters(objects);
         logger.info("参数为:{}",JSON.toJSONString(objects));
         rpcRequest.setID(IdUtil.getId());
-        Object result = nettyClient.send(rpcRequest);
-        logger.info("发送对象:{}",JSON.toJSONString(result));
-        Class<?> returnType = method.getReturnType();
+        logger.info("发送对象:{}",JSON.toJSONString(rpcRequest));
 
+        Object result = nettyClient.send(rpcRequest);
+        logger.info("接受对象:{}",JSON.toJSONString(result));
+
+        JSONObject s = JSON.parseObject((String)result);
+        if(s.containsKey("startPosition")){
+            CFile cFile = JSON.parseObject(result.toString(),CFile.class);
+            System.out.println(JSON.toJSONString(cFile));
+            return cFile;
+        }
+        Class<?> returnType = method.getReturnType();
         RpcResponse rpcResponse = JSON.parseObject(result.toString(),RpcResponse.class);
         logger.info("接受对象:{}",JSON.toJSONString(rpcResponse));
         if(rpcResponse.getCode()==1)
@@ -62,6 +71,4 @@ public class RpcFactory implements InvocationHandler {
             return JSONObject.parseObject(data.toString(),returnType);
         }
     }
-
-
 }

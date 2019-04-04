@@ -45,7 +45,7 @@ public class ConnectManage {
 
     @PostConstruct
     private void connectServerNode(){
-        String servicename = "demo.service.interfaces.UserService";
+        String servicename = "demo.service.interfaces.FileService";
         String host =null;
         int port = 0;
         if(redisService.hasKey(servicename)){

@@ -56,12 +56,10 @@ public class NettyServer implements ApplicationContextAware, InitializingBean {
         for(Object servicebean:beansWithAnnotation.values()){
             Class<?> clazz = servicebean.getClass();
             Class<?>[] interfaces = clazz.getInterfaces();
-
             for(Class<?> inter:interfaces){
                 String intername = inter.getName();
                 logger.info("加载服务类:{}",intername);
                 serviceMap.put(intername,servicebean);
-                System.out.println(intername+servicebean.getClass().getName());
             }
         }
         logger.info("已加载全部服务接口:{}", serviceMap);

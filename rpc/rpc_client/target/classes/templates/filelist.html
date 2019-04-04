@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
+<head>
+    <script type="text/javascript" src="/js/jquery-3.2.1.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div>
+    <p th:text="${currPath}"></p>
+    <a th:href="@{'/getfiles?filepath='+${currPath}}">上一级</a>
+    <input type="file" id="file" onchange="getFilePath()"
+           style="filter:alpha(opacity=0);opacity:0;width: 0;height: 0;"/>
+</div>
+<div th:each="flist:${filelist}">
+    <a th:text="${flist.abpatht}" th:if="${flist.directory==false}" href="javascript:selectFile()" th:value="${flist.filename}"></a>
+    <a th:text="${flist.abpatht}" th:if="${flist.directory==true}"  th:href="@{'/getfiles?filepath='+${flist.filename}}"></a>
+</div>
+<script th:inline="javascript">
+    function selectFile(){
+        //触发 文件选择的click事件
+
+            var Message = "please choose folder";   //选择框提示信息
+            var Shell = new ActiveXObject( "Shell.Application" );
+            var Folder = Shell.BrowseForFolder(0,Message,0x0040,0x11);//起始目录为：我的电脑
+            //var Folder = Shell.BrowseForFolder(0,Message,0); //起始目录为：桌面
+            if(Folder != null){
+                Folder = Folder.items(); // 返回 FolderItems 对象
+                Folder = Folder.item(); // 返回 Folderitem 对象
+                Folder = Folder.Path;    // 返回路径
+                alert(Folder);
+            }
+        
+        /*$("#file").trigger("click");*/
+    }
+    /* 获取 文件的路径 ，用于测试*/
+    function getFilePath(){
+        alert($("#file").attr("value"));
+    }
+   /* th:href="@{'/getFile?filepath='+${flist.filename}}"*/
+</script>
+</body>
+</html>

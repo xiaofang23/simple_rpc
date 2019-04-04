@@ -36,7 +36,6 @@ public class NettyClient {
     @Autowired
     ConnectManage connectManage;
 
-
     public NettyClient(){
             bootstrap.group(group)
                     .channel(NioSocketChannel.class)
@@ -58,14 +57,17 @@ public class NettyClient {
         logger.info("RPC客户端退出,释放资源!");
         group.shutdownGracefully();
     }
-    public Object send(RpcRequest request) throws InterruptedException{
 
+    public Object send(RpcRequest request) throws InterruptedException{
         Channel channel = connectManage.chooseChannel();
         if (channel!=null && channel.isActive()) {
             SynchronousQueue<Object> queue = clientHandler.sendRequest(request,channel);
+            logger.info("queue:{}",JSONArray.toJSONString(queue));
             Object result = queue.take();
+            logger.info("result是:{}",JSONArray.toJSONString(result));
             return JSONArray.toJSONString(result);
         }else{
+            //logger.info("channel 为null:{}",JSONArray.toJSONString(request));
             RpcResponse res = new RpcResponse();
             res.setCode(1);
             res.setError_msg("未正确连接到服务器.请检查相关配置信息!");
