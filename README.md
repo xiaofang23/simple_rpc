@@ -9,3 +9,8 @@ a simple rpc when i learn it
 ## As for 4-4
 i had finished the function that we can ask a file from server and get the file from server. but donot implement select the directory story file and upload file.
 
+## As for 4-10
+- update the fileserver,use a Executor to handle the file request ,so you can open more than two pages to download different files
+- update the  send_end and receive_end code, more clear.
+- next step ,upload file
+
