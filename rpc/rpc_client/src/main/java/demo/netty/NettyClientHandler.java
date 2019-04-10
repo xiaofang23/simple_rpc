@@ -6,6 +6,7 @@ import demo.connect.ConnectManage;
 import demo.entity.CFile;
 import demo.rpc_entity.RpcRequest;
 import demo.rpc_entity.RpcResponse;
+import demo.service.imps.UserPathService;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -23,7 +24,9 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.SynchronousQueue;
 
-
+/*
+created by xifoo ,i didnot mark the date when it first was created,maybe i can refer the date on git about the file
+ */
 @Component
 @ChannelHandler.Sharable
 public class NettyClientHandler extends ChannelInboundHandlerAdapter  {
@@ -31,11 +34,10 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter  {
     @Autowired
     ConnectManage connectManage;
 
-    Logger logger = LoggerFactory.getLogger(this.getClass());
+    @Autowired
+    UserPathService userPathService;
 
-    private int byteRead;
-    private volatile int start = 0;
-    private String file_dir = "C:\\Users\\lenovo\\Desktop\\filedemo\\dir1";
+    Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private ConcurrentHashMap<String,SynchronousQueue<Object>> queueMap = new ConcurrentHashMap<>();
 
@@ -52,41 +54,8 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter  {
     }
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg)throws Exception {
+        handle(ctx,msg);
         logger.info("RPC服务端发送:"+JSON.toJSONString(msg));
-        JSONObject object = (JSONObject)msg;
-        if(object.containsKey("startPosition")){
-            CFile cFile = JSON.parseObject(msg.toString(), CFile.class);;
-            byte[] bytes = cFile.getBytes();
-            byteRead = cFile.getEndPosition();
-            String filename = cFile.getFilename();
-            String path = file_dir+ File.separator+filename;
-            File file = new File(path);
-            RandomAccessFile randomAccessFile = new RandomAccessFile(file,"rw");
-            randomAccessFile.seek(start);
-            randomAccessFile.write(bytes);
-            start = start+byteRead;
-            if(byteRead>0){
-                ctx.writeAndFlush(start);
-                randomAccessFile.close();
-                if(byteRead!=1024*10){
-                    Thread.sleep(1000);
-                }
-            }else{
-                randomAccessFile.close();
-                logger.info("处理完毕,文件路径:"+path+","+byteRead);
-                String requestId = cFile.getId();
-                SynchronousQueue<Object> queue = queueMap.get(requestId);
-                queue.put(cFile);
-                queueMap.remove(requestId);
-            }
-        }else{
-            logger.info("RPC服务端发送:"+JSON.toJSONString(msg));
-            RpcResponse response = JSON.parseObject(msg.toString(), RpcResponse.class);
-            String requestId = response.getRequestId();
-            SynchronousQueue<Object> queue = queueMap.get(requestId);
-            queue.put(response);
-            queueMap.remove(requestId);
-        }
     }
 
     public SynchronousQueue<Object> sendRequest(RpcRequest request, Channel channel) {
@@ -111,9 +80,45 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter  {
         }
     }
 
-
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause){
         logger.info("RPC通信服务器发生异常.{}",cause);
         ctx.channel().close();
+    }
+
+    private void handle(ChannelHandlerContext ctx, Object msg) throws Exception{
+        int byteRead;
+        JSONObject object = (JSONObject)msg;
+        if(object.containsKey("startPosition")){
+            int start=0;
+            CFile cFile = JSON.parseObject(msg.toString(), CFile.class);
+            String filename = cFile.getFilename();
+            String path = userPathService.getStorypath()+ File.separator+filename;
+            byte[] bytes = cFile.getBytes();
+            byteRead = bytes.length;
+            if(cFile.getEndPosition()==-1){
+                logger.info("处理完毕,文件路径:"+path+","+byteRead);
+                String requestId = cFile.getId();
+                SynchronousQueue<Object> queue = queueMap.get(requestId);
+                queue.put(cFile);
+                queueMap.remove(requestId);
+                return ;
+            }
+            File file = new File(path);
+            RandomAccessFile randomAccessFile = new RandomAccessFile(file,"rw");
+            randomAccessFile.seek(cFile.getStartPosition());
+            randomAccessFile.write(bytes);
+            start = cFile.getEndPosition();
+            cFile.setStartPosition(start);
+            cFile.setBytes(null);
+            ctx.writeAndFlush(cFile);
+            randomAccessFile.close();
+        }else{
+            logger.info("RPC服务端发送:"+JSON.toJSONString(msg));
+            RpcResponse response = JSON.parseObject(msg.toString(), RpcResponse.class);
+            String requestId = response.getRequestId();
+            SynchronousQueue<Object> queue = queueMap.get(requestId);
+            queue.put(response);
+            queueMap.remove(requestId);
+        }
     }
 }
