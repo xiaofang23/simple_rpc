@@ -3,6 +3,7 @@ package demo.netty;
 import demo.annotation.RpcService;
 import demo.en_decode.Decoder;
 import demo.en_decode.Encoder;
+import demo.executor.SimpleRpcThreadPoolExecutor;
 import demo.servicecenter.ServiceCenter;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -38,6 +39,9 @@ public class NettyServer implements ApplicationContextAware, InitializingBean {
     @Autowired
     ServiceCenter serviceCenter;
 
+    @Autowired
+    SimpleRpcThreadPoolExecutor simpleRpcThreadPoolExecutor;
+
     private Map<String, Object> serviceMap = new HashMap<>();
 
     @Override
@@ -67,7 +71,7 @@ public class NettyServer implements ApplicationContextAware, InitializingBean {
 
     private void serverRun() {
 
-        final NettyServerHandler handler = new NettyServerHandler(serviceMap);
+        final NettyServerHandler handler = new NettyServerHandler(simpleRpcThreadPoolExecutor,serviceMap);
         new Thread(()-> {
             try{
                 ServerBootstrap bootstrap = new ServerBootstrap();
