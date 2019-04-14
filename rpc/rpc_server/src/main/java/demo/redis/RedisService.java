@@ -18,7 +18,7 @@ public class RedisService {
         this.redisTemplate = redisTemplate;
     }
 
-/**
+    /**
      * 指定缓存失效时间
      * @param key 键
      * @param time 时间(秒)
@@ -37,7 +37,7 @@ public class RedisService {
         }
     }
 
-/**
+    /**
      * 判断key是否存在
      * @param key 键
      * @return true 存在 false不存在
@@ -52,7 +52,7 @@ public class RedisService {
         }
     }
 
-/**
+    /**
      * 删除缓存
      * @param key 可以传一个值 或多个
      */
@@ -68,7 +68,7 @@ public class RedisService {
         }
     }
 
-/**
+    /**
      * 普通缓存获取
      * @param key 键
      * @return 值
@@ -79,7 +79,7 @@ public class RedisService {
     }
 
 
-/**
+    /**
      * 普通缓存放入
      * @param key 键
      * @param value 值
@@ -96,7 +96,7 @@ public class RedisService {
         }
     }
 
-/**
+    /**
      * 普通缓存放入并设置时间
      * @param key 键
      * @param value 值
